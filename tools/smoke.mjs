@@ -10,7 +10,7 @@
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const target = process.argv[2] ?? 'api/[...path].ts';
+const target = process.argv[2] ?? 'api/router.ts';
 const { default: handler } = await import(pathToFileURL(resolve(process.cwd(), target)).href);
 
 function call(method, path, { query = {}, body } = {}) {
@@ -56,8 +56,30 @@ function check(label, condition, detail) {
 
 console.log('Прогон API:');
 
-const health = await call('GET', '/api/health', { query: { path: ['health'] } });
-check('GET /api/health → 200', health.status === 200 && health.body.ok === true, health);
+// --- Маршрутизация. Общие проверки: ловят поломку rewrite и разбора пути. ---
+
+const health = await call('GET', '/api/health', { query: { __route: 'health' } });
+check('GET /api/health → 200 (через __route, как в проде)', health.status === 200 && health.body.ok === true, health);
+
+const healthFallback = await call('GET', '/api/health', { query: { path: ['health'] } });
+check('GET /api/health → 200 (запасной разбор query.path)', healthFallback.status === 200, healthFallback);
+
+const seedList = await call('GET', '/api/bookings', { query: { __route: 'bookings' } });
+const seedBooking = Array.isArray(seedList.body) ? seedList.body[0] : null;
+const seedId = seedBooking?.id ?? 'none';
+const deep = await call('GET', `/api/bookings/${seedId}`, { query: { __route: `bookings/${seedId}` } });
+check(
+  'Многосегментный путь доходит до маршрутизатора',
+  deep.status === 200 && deep.body?.id === seedBooking?.id,
+  deep,
+);
+
+const deepMissing = await call('GET', '/api/__probe/deep', { query: { __route: '__probe/deep' } });
+check(
+  'Неизвестный многосегментный путь → 404 от API',
+  deepMissing.status === 404 && deepMissing.body?.error?.includes('__probe/deep'),
+  deepMissing,
+);
 
 const rooms = await call('GET', '/api/rooms', { query: { path: ['rooms'] } });
 check('GET /api/rooms → 4 зала', rooms.status === 200 && rooms.body.length === 4, rooms);
@@ -126,8 +148,8 @@ const removed = await call('DELETE', `/api/bookings/${created.body.id}`, {
 });
 check('DELETE брони → 200', removed.status === 200 && removed.body.ok === true, removed);
 
-const missing = await call('GET', '/api/nope', { query: { path: ['nope'] } });
-check('Неизвестный маршрут → 404', missing.status === 404, missing);
+const missing = await call('GET', '/api/nope', { query: { __route: 'nope' } });
+check('Неизвестный маршрут → 404 от API, а не от платформы', missing.status === 404 && missing.body?.error, missing);
 
 console.log(failures === 0 ? '\nВсе проверки пройдены.' : `\nПровалено проверок: ${failures}`);
 process.exit(failures === 0 ? 0 : 1);

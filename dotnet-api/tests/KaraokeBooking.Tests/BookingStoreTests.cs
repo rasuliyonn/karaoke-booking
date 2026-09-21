@@ -195,4 +195,27 @@ public class BookingStoreTests
         Assert.Single(confirmed);
         Assert.Equal(booking.Id, confirmed[0].Id);
     }
+
+    [Fact]
+    public void Бронь_читается_по_идентификатору()
+    {
+        var store = NewStore();
+        var date = BookingStore.IsoDate(14);
+        var created = store.Create(Valid(date: date));
+
+        var found = store.GetBooking(created.Id);
+
+        Assert.Equal(created.Id, found.Id);
+        Assert.Equal(created.GuestName, found.GuestName);
+    }
+
+    [Fact]
+    public void Чтение_неизвестной_брони_бросает_404()
+    {
+        var store = NewStore();
+
+        var error = Assert.Throws<DomainException>(() => store.GetBooking("bk-ghost"));
+
+        Assert.Equal(404, error.Status);
+    }
 }

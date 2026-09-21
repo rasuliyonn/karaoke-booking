@@ -4,6 +4,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
+    { "source": "/api/:route*", "destination": "/api/router?__route=:route*" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

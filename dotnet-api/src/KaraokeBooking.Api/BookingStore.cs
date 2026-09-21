@@ -235,6 +235,15 @@ public sealed class BookingStore
         }
     }
 
+    public Booking GetBooking(string id)
+    {
+        lock (_gate)
+        {
+            return _bookings.FirstOrDefault(row => row.Id == id)
+                ?? throw new DomainException(404, "Бронирование не найдено");
+        }
+    }
+
     public Booking UpdateStatus(string id, string? status)
     {
         var next = (status ?? string.Empty).Trim();

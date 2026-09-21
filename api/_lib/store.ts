@@ -293,6 +293,12 @@ export function createBooking(input: unknown): Booking {
   return booking;
 }
 
+export function getBooking(id: string): Booking {
+  const booking = bookings.find((b) => b.id === id);
+  if (!booking) throw notFound('Бронирование не найдено');
+  return booking;
+}
+
 export function updateBookingStatus(id: string, status: unknown): Booking {
   const next = String(status ?? '').trim() as BookingStatus;
   if (!VALID_STATUSES.includes(next)) {

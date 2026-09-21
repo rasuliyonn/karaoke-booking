@@ -52,6 +52,9 @@ app.MapPost("/api/bookings", (BookingStore store, CreateBookingRequest request) 
     return Results.Created($"/api/bookings/{created.Id}", created);
 });
 
+app.MapGet("/api/bookings/{id}", (BookingStore store, string id) =>
+    Results.Ok(store.GetBooking(id)));
+
 app.MapPatch("/api/bookings/{id}", (BookingStore store, string id, UpdateStatusRequest request) =>
     Results.Ok(store.UpdateStatus(id, request.Status)));
 

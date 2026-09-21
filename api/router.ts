@@ -3,10 +3,24 @@ import { asString, fail, json, notFound, readBody } from './_lib/http.js';
 import * as store from './_lib/store.js';
 
 /**
- * Сегменты пути после /api/. Vercel не всегда заполняет req.query.path для
- * catch-all маршрута, поэтому основной источник — req.url.
+ * Сегменты пути после /api/.
+ *
+ * Источников три, и порядок здесь важен:
+ *  1. `__route` — его подставляет rewrite из vercel.json (`/api/:route*`);
+ *  2. `path` — на случай прямого вызова файла `[...path]`;
+ *  3. `req.url` — запасной вариант для локального прогона.
+ *
+ * Почему не catch-all файл: Vercel сопоставляет `api/[...path].ts` только с
+ * ОДНИМ сегментом пути, поэтому `/api/bookings/:id` до функции не доходит и
+ * отдаётся платформенная 404. Rewrite в vercel.json решает это явно.
  */
 function segmentsOf(req: VercelRequest): string[] {
+  const injected = req.query?.__route;
+  if (Array.isArray(injected)) return injected.map(String);
+  if (typeof injected === 'string' && injected.length > 0) {
+    return injected.split('/').filter(Boolean);
+  }
+
   const fromQuery = req.query?.path;
   if (Array.isArray(fromQuery)) return fromQuery.map(String);
   if (typeof fromQuery === 'string' && fromQuery.length > 0) {
@@ -18,7 +32,7 @@ function segmentsOf(req: VercelRequest): string[] {
 }
 
 /**
- * Единая точка входа API. Vercel отдаёт сюда всё, что приходит на /api/*,
+ * Единая точка входа API. Все запросы на /api/* приходят сюда через rewrite,
  * поэтому маршрутизация сделана вручную — так логика лежит рядом, а не
  * размазана по десятку файлов-функций.
  */
@@ -47,6 +61,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (resource === 'bookings') {
+      if (id && method === 'GET') {
+        return json(res, 200, store.getBooking(id));
+      }
       if (method === 'GET') {
         return json(
           res,

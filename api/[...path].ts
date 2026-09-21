@@ -1,6 +1,21 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { asString, fail, json, notFound, readBody } from './_lib/http';
-import * as store from './_lib/store';
+import { asString, fail, json, notFound, readBody } from './_lib/http.js';
+import * as store from './_lib/store.js';
+
+/**
+ * Сегменты пути после /api/. Vercel не всегда заполняет req.query.path для
+ * catch-all маршрута, поэтому основной источник — req.url.
+ */
+function segmentsOf(req: VercelRequest): string[] {
+  const fromQuery = req.query?.path;
+  if (Array.isArray(fromQuery)) return fromQuery.map(String);
+  if (typeof fromQuery === 'string' && fromQuery.length > 0) {
+    return fromQuery.split('/').filter(Boolean);
+  }
+
+  const path = (req.url ?? '').split('?')[0].replace(/^\/api\/?/, '');
+  return path.length > 0 ? path.split('/').filter(Boolean) : [];
+}
 
 /**
  * Единая точка входа API. Vercel отдаёт сюда всё, что приходит на /api/*,
@@ -9,8 +24,7 @@ import * as store from './_lib/store';
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    const raw = req.query.path;
-    const segments = Array.isArray(raw) ? raw : raw ? [raw] : [];
+    const segments = segmentsOf(req);
     const [resource, id] = segments;
     const method = (req.method ?? 'GET').toUpperCase();
 

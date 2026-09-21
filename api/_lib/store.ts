@@ -14,8 +14,8 @@ import {
   type RoomAvailability,
   type Slot,
   type StatsResponse,
-} from './types.ts';
-import { badRequest, conflict, notFound } from './http.ts';
+} from './types.js';
+import { badRequest, conflict, notFound } from './http.js';
 
 export const ROOMS: Room[] = [
   {

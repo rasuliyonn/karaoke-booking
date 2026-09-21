@@ -3,7 +3,7 @@
 Система бронирования караоке-залов: расписание слотов по часам, оформление и
 подтверждение броней, загрузка залов и выручка за смену.
 
-**Демо:** _ссылка появится после деплоя_
+**Демо:** https://karaoke-booking-neon.vercel.app
 
 ![Стек](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white&labelColor=0B1120)
 ![Стек](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white&labelColor=0B1120)

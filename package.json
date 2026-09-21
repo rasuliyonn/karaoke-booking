@@ -1,0 +1,29 @@
+{
+  "name": "karaoke-booking",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Бронирование караоке-залов: расписание, слоты, брони, статистика",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "smoke": "esbuild 'api/[...path].ts' --bundle --platform=node --format=esm --outfile=.smoke/fn.mjs --log-level=warning && node tools/smoke.mjs .smoke/fn.mjs"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vercel/node": "^5.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.6.0",
+    "vite": "^7.0.0"
+  }
+}

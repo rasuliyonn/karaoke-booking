@@ -1,0 +1,36 @@
+# Локальный запуск обеих частей: C# API + React-фронтенд.
+# Фронтенд проксирует /api на контейнер api (см. API_PROXY в vite.config.ts).
+#
+#   docker compose up --build
+#   → http://localhost:5173
+services:
+  api:
+    build: ./dotnet-api
+    ports:
+      - '5080:8080'
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    healthcheck:
+      test: ['CMD', 'curl', '-fsS', 'http://localhost:8080/api/health']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  web:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+      - web-node-modules:/app/node_modules
+    command: sh -c "npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0"
+    ports:
+      - '5173:5173'
+    environment:
+      API_PROXY: http://api:8080
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  web-node-modules:

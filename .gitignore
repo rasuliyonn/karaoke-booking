@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.vercel/
+.smoke/
+.env
+.env.local
+*.local
+.DS_Store
+*.log
+
+# .NET
+bin/
+obj/
